@@ -1,4 +1,93 @@
-// --- DRAG & DROP GLOBAL ---
+// --- GERENCIADOR DE ÁUDIO GLOBAL ---
+const AudioManager = {
+    bgm: new Audio('menu.mp3'),
+    craftSfx: new Audio('craft.mp3'),
+    ctx: new (window.AudioContext || window.webkitAudioContext)(),
+    musicaIniciada: false,
+
+    init() {
+        // Configurações da Música de Fundo
+        this.bgm.loop = true;   // Toca para sempre
+        this.bgm.volume = 0.4;  // Volume ambiente (não muito alto)
+        
+        // Configura som de craft
+        this.craftSfx.volume = 0.8;
+
+        // GATILHO: Toca música no primeiro clique em qualquer lugar
+        document.body.addEventListener('click', () => {
+            if (!this.musicaIniciada) {
+                this.bgm.play().catch(e => console.log("Erro BGM:", e));
+                
+                // Destrava o sintetizador de áudio também
+                if (this.ctx.state === 'suspended') this.ctx.resume();
+                
+                this.musicaIniciada = true;
+            }
+        }, { once: true }); // Remove o evento depois de tocar a primeira vez
+    },
+
+    // Toca efeitos sonoros (Sintetizados ou Arquivos)
+    playSFX(tipo) {
+        // Se for CRAFT, usa o arquivo mp3
+        if (tipo === 'craft') {
+            this.craftSfx.currentTime = 0; // Reinicia se já estiver tocando
+            this.craftSfx.play().catch(e => {});
+            return;
+        }
+
+        // É mais rápido para sons de interface repetitivos
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        const now = this.ctx.currentTime;
+
+        if (tipo === 'hover') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(800, now);
+            gain.gain.setValueAtTime(0.02, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+            osc.start(now);
+            osc.stop(now + 0.05);
+        } 
+        else if (tipo === 'click') {
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(200, now);
+            gain.gain.setValueAtTime(0.05, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+            osc.start(now);
+            osc.stop(now + 0.1);
+        }
+        else if (tipo === 'error') {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(150, now);
+            osc.frequency.linearRampToValueAtTime(100, now + 0.3);
+            gain.gain.setValueAtTime(0.1, now);
+            gain.gain.linearRampToValueAtTime(0.001, now + 0.3);
+            osc.start(now);
+            osc.stop(now + 0.3);
+        }
+    },
+
+    // Adiciona som de hover/click em tudo
+    ativarSonsUI() {
+        const interativos = document.querySelectorAll('button, .tab, .slot-circle, .inv-slot, .drop-zone, input');
+        interativos.forEach(el => {
+            // Remove antigos para não duplicar
+            el.removeEventListener('mouseenter', this.hoverHandler);
+            el.removeEventListener('click', this.clickHandler);
+            
+            // Cria handlers para poder remover depois se precisar
+            el.hoverHandler = () => this.playSFX('hover');
+            el.clickHandler = () => this.playSFX('click');
+
+            el.addEventListener('mouseenter', el.hoverHandler);
+            el.addEventListener('click', el.clickHandler);
+        });
+    }
+};
+
+// --- DRAG & DROP ---
 function allowDrop(ev) { ev.preventDefault(); }
 function drag(ev) { ev.dataTransfer.setData("text", ev.target.src); }
 
@@ -16,31 +105,27 @@ function drop(ev) {
         const newImg = document.createElement('img');
         newImg.src = data;
         target.appendChild(newImg);
+        
+        // Toca som mecânico ao equipar (opcional, reusando o click)
+        AudioManager.playSFX('click');
     }
 }
 
-// --- MODEL (Agora com LocalStorage!) ---
+// --- MODEL (Persistência) ---
 const FabricatorModel = {
     itens: [],
     capacidadeMaxima: 30,
     
-    // Salva no navegador
-    salvarDados() {
-        localStorage.setItem('subnautica_inventory', JSON.stringify(this.itens));
-    },
-
-    // Carrega do navegador
+    salvarDados() { localStorage.setItem('subnautica_inventory', JSON.stringify(this.itens)); },
     carregarDados() {
         const dadosSalvos = localStorage.getItem('subnautica_inventory');
-        if (dadosSalvos) {
-            this.itens = JSON.parse(dadosSalvos);
-        }
+        if (dadosSalvos) this.itens = JSON.parse(dadosSalvos);
     },
 
     adicionar(item) {
         if (this.itens.length < this.capacidadeMaxima) {
             this.itens.push(item);
-            this.salvarDados(); // Salva sempre que adiciona!
+            this.salvarDados();
             return true;
         }
         return false;
@@ -63,11 +148,9 @@ const FabricatorView = {
     },
 
     atualizar(listaItens) {
-        // Limpa tudo visualmente
         const slots = document.querySelectorAll('.inv-slot');
         slots.forEach(s => { s.className = 'inv-slot'; s.innerHTML = ''; });
 
-        // Re-preenche com base nos dados
         listaItens.forEach((item, index) => {
             const slot = document.getElementById(`slot-${index}`);
             if (slot) {
@@ -86,17 +169,15 @@ const FabricatorView = {
 // --- CONTROLLER ---
 const FabricatorController = {
     init() {
-        // 1. Inicia a tela de Boot
+        AudioManager.init(); // Prepara a música de fundo
         this.executarBoot();
 
-        // 2. Configura a View
         FabricatorView.inicializarGrid();
-        
-        // 3. Tenta carregar dados salvos do passado
         FabricatorModel.carregarDados();
         FabricatorView.atualizar(FabricatorModel.obterTodos());
+        
+        AudioManager.ativarSonsUI(); // Ativa sons nos elementos iniciais
 
-        // 4. Eventos
         document.getElementById('formProduto').addEventListener('submit', (e) => {
             e.preventDefault();
             this.fabricar();
@@ -104,19 +185,13 @@ const FabricatorController = {
     },
 
     executarBoot() {
-        // Toca o som de boot (usando o mesmo arquivo de warning por enquanto, ou outro se tiver)
-        const audio = document.getElementById('audioOxygen');
-        // Dica: Navegadores bloqueiam autoplay. O som pode não tocar na primeira vez sem clique.
+        const audio = document.getElementById('audioBoot');
         
         setTimeout(() => {
-            // Tenta tocar um bip curto simulado
             if(audio) { audio.volume = 0.5; audio.play().catch(()=>{}); }
-            
-            // Inicia o sistema de oxigênio só depois do boot
             OxygenSystem.iniciar();
         }, 500);
 
-        // Depois de 3.5 segundos (tempo da animação CSS), esconde a tela
         setTimeout(() => {
             document.getElementById('boot-screen').classList.add('boot-complete');
         }, 3500);
@@ -135,21 +210,27 @@ const FabricatorController = {
             });
 
             if (sucesso) {
+                // TOCA O SOM DO ARQUIVO
+                AudioManager.playSFX('craft');
+                
                 FabricatorView.atualizar(FabricatorModel.obterTodos());
                 nomeInput.value = ''; precoInput.value = ''; imgInput.value = '';
+                
+                // Reativa sons nos novos itens
+                AudioManager.ativarSonsUI();
             } else {
+                AudioManager.playSFX('error');
                 alert("INVENTORY FULL");
             }
         }
     }
 };
 
-// --- OXYGEN SYSTEM (Mantido igual) ---
+// --- OXYGEN SYSTEM ---
 const OxygenSystem = {
     nivel: 45, maximo: 45, intervalo: null, audioTocado: false,
     
     iniciar() { 
-        // Garante que não inicie duas vezes
         if(this.intervalo) clearInterval(this.intervalo);
         this.intervalo = setInterval(() => this.respirar(), 1000); 
     },
@@ -189,28 +270,6 @@ const OxygenSystem = {
         }, 4000);
     }
 };
-const sfx = {
-    hover: new Audio('hover.mp3'), // Você precisa ter esse arquivo
-    click: new Audio('click.mp3'), // E esse também
-    craft: new Audio('craft.mp3'), // Opcional: som de martelo/construção
-    
-    play(tipo) {
-        // Clona o áudio para poder tocar sons sobrepostos rapidamente
-        const som = this[tipo].cloneNode();
-        som.volume = 0.3; // Volume mais baixo para não irritar
-        som.play().catch(() => {}); // Ignora erro se não tiver interagido ainda
-    }
-};
 
-// Adiciona som a todos os botões e slots interativos automaticamente
-function ativarSonsInterface() {
-    // Pega tudo que é clicável
-    const interativos = document.querySelectorAll('button, .tab, .slot-circle, .inv-slot, .drop-zone');
-
-    interativos.forEach(el => {
-        el.addEventListener('mouseenter', () => sfx.play('hover'));
-        el.addEventListener('click', () => sfx.play('click'));
-    });
-}
-// INICIA O SISTEMA
+// START
 FabricatorController.init();
