@@ -3,16 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Subnautica Fabricator</title>
+    <title>Subnautica PDA</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
 
     <div id="blackout-screen"></div>
-
     <div class="diving-mask"></div>
-    
     <div id="red-alert-overlay"></div>
 
     <audio id="audioOxygen" src="warning.mp3"></audio>
@@ -22,56 +20,85 @@
     <div class="hud-container">
         <div class="hud-cluster">
             <div class="gauge oxygen" id="oxygenGauge">
-                <div class="oxygen-fill"></div> <div class="inner-circle">
+                <div class="oxygen-fill"></div>
+                <div class="inner-circle">
                     <span class="label">O<sub>2</sub></span>
                     <span class="value" id="oxygenValue">45</span>
                 </div>
             </div>
-
             <div class="gauge health"><i class="fa-solid fa-heart-pulse"></i></div>
             <div class="gauge food"><i class="fa-solid fa-apple-whole"></i></div>
             <div class="gauge water"><i class="fa-solid fa-droplet"></i></div>
         </div>
     </div>
 
-    <div class="pda-wrapper">
-        <div class="pda-chassis">
-            <div class="grip-texture"></div>
-            <div class="power-light"></div>
+    <div class="pda-container">
+        
+        <div class="pda-grip-section">
+            <div class="rubber-grip"></div>
+            <div class="button-pill"></div>
+            <div class="cam-lens"></div>
         </div>
 
-        <div class="pda-screen">
-            <div class="screen-grid"></div>
-            
-            <header class="screen-header">
-                <div class="tab active"><i class="fa-solid fa-user-astronaut"></i></div>
-                <div class="tab"><i class="fa-solid fa-box-open"></i></div>
-                <div class="tab"><i class="fa-solid fa-map-location-dot"></i></div>
-                <div class="tab"><i class="fa-solid fa-gear"></i></div>
-                <div class="tab"><i class="fa-solid fa-database"></i></div>
-            </header>
+        <div class="pda-screen-section">
+            <div class="screen-header">
+                <div class="tab active"><i class="fa-solid fa-user"></i></div>
+                <div class="tab"><i class="fa-solid fa-wrench"></i></div>
+                <div class="tab"><i class="fa-solid fa-location-dot"></i></div>
+                <div class="tab"><i class="fa-solid fa-images"></i></div>
+                <div class="tab"><i class="fa-solid fa-book-open"></i></div>
+            </div>
 
-            <main class="screen-content">
-                <section class="column left">
-                    <h4 class="section-title">BLUEPRINTS</h4>
-                    <form id="formProduto">
-                        <div class="input-box">
-                            <input type="text" id="nome" placeholder="Item Name..." autocomplete="off">
+            <div class="screen-body">
+                
+                <div class="panel-left">
+                    <h3 class="panel-label">INVENTÁRIO</h3>
+                    
+                    <div class="inventory-grid" id="gridInventario">
                         </div>
-                        <div class="input-box">
-                            <input type="number" id="preco" placeholder="Energy Cost" autocomplete="off">
-                        </div>
-                        <button type="submit" class="btn-craft">FABRICATE</button>
-                    </form>
-                </section>
 
-                <section class="column right">
-                    <h4 class="section-title">INVENTORY</h4>
-                    <div class="inventory-list-container">
-                        <ul id="listaProdutos" class="hex-grid"></ul>
+                    <div class="fabricator-controls">
+                        <form id="formProduto">
+                            <div class="input-group">
+                                <input type="text" id="nome" placeholder="Nome..." autocomplete="off" required>
+                                <input type="number" id="preco" placeholder="⚡" autocomplete="off" required style="width: 60px;">
+                            </div>
+                            <input type="text" id="imgUrl" placeholder="URL da Imagem (opcional)" autocomplete="off">
+                            
+                            <button type="submit"><i class="fa-solid fa-hammer"></i> FABRICAR</button>
+                        </form>
                     </div>
-                </section>
-            </main>
+                </div>
+
+                <div class="panel-right">
+                    <h3 class="panel-label">EQUIPADO</h3>
+                    <div class="equipment-layout">
+                        <div class="slot-center-body drop-zone" ondrop="drop(event)" ondragover="allowDrop(event)">
+                            <i class="fa-solid fa-user-astronaut placeholder-icon"></i>
+                        </div>
+                        
+                        <div class="slot-circle slot-goggles drop-zone" ondrop="drop(event)" ondragover="allowDrop(event)">
+                            <i class="fa-solid fa-glasses placeholder-icon"></i>
+                        </div>
+                        <div class="slot-circle slot-chip1 drop-zone" ondrop="drop(event)" ondragover="allowDrop(event)">
+                            <i class="fa-solid fa-microchip placeholder-icon"></i>
+                        </div>
+                        <div class="slot-circle slot-chip2 drop-zone" ondrop="drop(event)" ondragover="allowDrop(event)">
+                            <i class="fa-solid fa-microchip placeholder-icon"></i>
+                        </div>
+                        <div class="slot-circle slot-gloves drop-zone" ondrop="drop(event)" ondragover="allowDrop(event)">
+                            <i class="fa-solid fa-hands placeholder-icon"></i>
+                        </div>
+                        <div class="slot-circle slot-fins drop-zone" ondrop="drop(event)" ondragover="allowDrop(event)">
+                            <i class="fa-solid fa-shoe-prints placeholder-icon"></i>
+                        </div>
+                        <div class="slot-circle slot-tank drop-zone" ondrop="drop(event)" ondragover="allowDrop(event)">
+                            <i class="fa-solid fa-bottle-water placeholder-icon"></i>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
         </div>
     </div>
 
