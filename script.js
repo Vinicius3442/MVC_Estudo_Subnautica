@@ -1,52 +1,46 @@
-// --- FUNÇÕES DE DRAG & DROP (GLOBAIS) ---
-function allowDrop(ev) {
-    ev.preventDefault(); // Necessário para permitir soltar
-}
-
-function drag(ev) {
-    // Guarda a URL da imagem sendo arrastada
-    ev.dataTransfer.setData("text", ev.target.src);
-}
+// --- DRAG & DROP GLOBAL ---
+function allowDrop(ev) { ev.preventDefault(); }
+function drag(ev) { ev.dataTransfer.setData("text", ev.target.src); }
 
 function drop(ev) {
     ev.preventDefault();
-    const data = ev.dataTransfer.getData("text"); // Pega a URL
-    
-    // Identifica o alvo (garante que é a div .drop-zone, não o ícone dentro)
+    const data = ev.dataTransfer.getData("text");
     let target = ev.target;
-    if (!target.classList.contains('drop-zone')) {
-        target = target.closest('.drop-zone');
-    }
+    if (!target.classList.contains('drop-zone')) target = target.closest('.drop-zone');
 
     if (target) {
-        // Limpa conteúdo anterior
-        // target.innerHTML = ''; 
-        // Ou melhor: Adiciona classe para esconder ícone e põe a imagem
-        
         target.classList.add('has-item');
-        
-        // Remove imagem antiga se houver
         const oldImg = target.querySelector('img');
         if(oldImg) oldImg.remove();
 
-        // Cria a nova imagem no slot
         const newImg = document.createElement('img');
         newImg.src = data;
         target.appendChild(newImg);
-        
-        // Toca um somzinho se quiser (opcional)
-        // new Audio('equip_sound.mp3').play();
     }
 }
 
-// --- MODEL ---
+// --- MODEL (Agora com LocalStorage!) ---
 const FabricatorModel = {
     itens: [],
     capacidadeMaxima: 30,
     
+    // Salva no navegador
+    salvarDados() {
+        localStorage.setItem('subnautica_inventory', JSON.stringify(this.itens));
+    },
+
+    // Carrega do navegador
+    carregarDados() {
+        const dadosSalvos = localStorage.getItem('subnautica_inventory');
+        if (dadosSalvos) {
+            this.itens = JSON.parse(dadosSalvos);
+        }
+    },
+
     adicionar(item) {
         if (this.itens.length < this.capacidadeMaxima) {
             this.itens.push(item);
+            this.salvarDados(); // Salva sempre que adiciona!
             return true;
         }
         return false;
@@ -69,26 +63,19 @@ const FabricatorView = {
     },
 
     atualizar(listaItens) {
-        // Reseta slots
+        // Limpa tudo visualmente
         const slots = document.querySelectorAll('.inv-slot');
-        slots.forEach(s => {
-            s.className = 'inv-slot';
-            s.innerHTML = '';
-        });
+        slots.forEach(s => { s.className = 'inv-slot'; s.innerHTML = ''; });
 
-        // Preenche slots
+        // Re-preenche com base nos dados
         listaItens.forEach((item, index) => {
             const slot = document.getElementById(`slot-${index}`);
             if (slot) {
                 slot.classList.add('filled');
-                
-                // Cria a imagem arrastável
                 const img = document.createElement('img');
-                // Se não tiver URL, usa uma imagem padrão do Subnautica (cubo)
                 img.src = item.imagem || 'https://static.wikia.nocookie.net/subnautica/images/a/aeb/Titanium.png';
                 img.draggable = true;
-                img.ondragstart = drag; // Vincula função de arrastar
-                
+                img.ondragstart = drag;
                 slot.appendChild(img);
                 slot.setAttribute('title', `${item.nome} (⚡${item.preco})`);
             }
@@ -99,14 +86,40 @@ const FabricatorView = {
 // --- CONTROLLER ---
 const FabricatorController = {
     init() {
+        // 1. Inicia a tela de Boot
+        this.executarBoot();
+
+        // 2. Configura a View
         FabricatorView.inicializarGrid();
         
+        // 3. Tenta carregar dados salvos do passado
+        FabricatorModel.carregarDados();
+        FabricatorView.atualizar(FabricatorModel.obterTodos());
+
+        // 4. Eventos
         document.getElementById('formProduto').addEventListener('submit', (e) => {
             e.preventDefault();
             this.fabricar();
         });
+    },
 
-        OxygenSystem.iniciar();
+    executarBoot() {
+        // Toca o som de boot (usando o mesmo arquivo de warning por enquanto, ou outro se tiver)
+        const audio = document.getElementById('audioOxygen');
+        // Dica: Navegadores bloqueiam autoplay. O som pode não tocar na primeira vez sem clique.
+        
+        setTimeout(() => {
+            // Tenta tocar um bip curto simulado
+            if(audio) { audio.volume = 0.5; audio.play().catch(()=>{}); }
+            
+            // Inicia o sistema de oxigênio só depois do boot
+            OxygenSystem.iniciar();
+        }, 500);
+
+        // Depois de 3.5 segundos (tempo da animação CSS), esconde a tela
+        setTimeout(() => {
+            document.getElementById('boot-screen').classList.add('boot-complete');
+        }, 3500);
     },
 
     fabricar() {
@@ -118,14 +131,12 @@ const FabricatorController = {
             const sucesso = FabricatorModel.adicionar({
                 nome: nomeInput.value,
                 preco: precoInput.value,
-                imagem: imgInput.value // Salva a URL
+                imagem: imgInput.value
             });
 
             if (sucesso) {
                 FabricatorView.atualizar(FabricatorModel.obterTodos());
-                nomeInput.value = '';
-                precoInput.value = '';
-                imgInput.value = '';
+                nomeInput.value = ''; precoInput.value = ''; imgInput.value = '';
             } else {
                 alert("INVENTORY FULL");
             }
@@ -136,7 +147,13 @@ const FabricatorController = {
 // --- OXYGEN SYSTEM (Mantido igual) ---
 const OxygenSystem = {
     nivel: 45, maximo: 45, intervalo: null, audioTocado: false,
-    iniciar() { this.intervalo = setInterval(() => this.respirar(), 1000); },
+    
+    iniciar() { 
+        // Garante que não inicie duas vezes
+        if(this.intervalo) clearInterval(this.intervalo);
+        this.intervalo = setInterval(() => this.respirar(), 1000); 
+    },
+    
     respirar() {
         if (this.nivel > 0) {
             this.nivel--;
@@ -147,14 +164,18 @@ const OxygenSystem = {
         }
     },
     view() {
-        document.getElementById('oxygenValue').innerText = this.nivel;
-        const pct = (this.nivel / this.maximo) * 100;
-        document.querySelector('.oxygen-fill').style.setProperty('--o2-percent', `${pct}%`);
+        const valEl = document.getElementById('oxygenValue');
+        if(valEl) {
+            valEl.innerText = this.nivel;
+            const pct = (this.nivel / this.maximo) * 100;
+            document.querySelector('.oxygen-fill').style.setProperty('--o2-percent', `${pct}%`);
+        }
     },
     alerta() {
         document.body.classList.add('critical-state');
         if(this.nivel === 10 && !this.audioTocado) {
-            document.getElementById('audioOxygen').play().catch(()=>{});
+            const audio = document.getElementById('audioOxygen');
+            if(audio) { audio.volume = 1.0; audio.play().catch(()=>{}); }
             this.audioTocado = true;
         }
     },
@@ -169,4 +190,5 @@ const OxygenSystem = {
     }
 };
 
+// INICIA O SISTEMA
 FabricatorController.init();
