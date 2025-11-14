@@ -189,6 +189,28 @@ const OxygenSystem = {
         }, 4000);
     }
 };
+const sfx = {
+    hover: new Audio('hover.mp3'), // Você precisa ter esse arquivo
+    click: new Audio('click.mp3'), // E esse também
+    craft: new Audio('craft.mp3'), // Opcional: som de martelo/construção
+    
+    play(tipo) {
+        // Clona o áudio para poder tocar sons sobrepostos rapidamente
+        const som = this[tipo].cloneNode();
+        som.volume = 0.3; // Volume mais baixo para não irritar
+        som.play().catch(() => {}); // Ignora erro se não tiver interagido ainda
+    }
+};
 
+// Adiciona som a todos os botões e slots interativos automaticamente
+function ativarSonsInterface() {
+    // Pega tudo que é clicável
+    const interativos = document.querySelectorAll('button, .tab, .slot-circle, .inv-slot, .drop-zone');
+
+    interativos.forEach(el => {
+        el.addEventListener('mouseenter', () => sfx.play('hover'));
+        el.addEventListener('click', () => sfx.play('click'));
+    });
+}
 // INICIA O SISTEMA
 FabricatorController.init();
