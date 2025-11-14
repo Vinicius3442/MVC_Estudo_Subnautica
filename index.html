@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subnautica Fabricator</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <div id="blackout-screen"></div>
+
+    <div class="diving-mask"></div>
+    
+    <div id="red-alert-overlay"></div>
+
+    <audio id="audioOxygen" src="warning.mp3"></audio>
+
+    <div class="background-animation"></div> 
+
+    <div class="hud-container">
+        <div class="hud-cluster">
+            <div class="gauge oxygen" id="oxygenGauge">
+                <div class="oxygen-fill"></div> <div class="inner-circle">
+                    <span class="label">O<sub>2</sub></span>
+                    <span class="value" id="oxygenValue">45</span>
+                </div>
+            </div>
+
+            <div class="gauge health"><i class="fa-solid fa-heart-pulse"></i></div>
+            <div class="gauge food"><i class="fa-solid fa-apple-whole"></i></div>
+            <div class="gauge water"><i class="fa-solid fa-droplet"></i></div>
+        </div>
+    </div>
+
+    <div class="pda-wrapper">
+        <div class="pda-chassis">
+            <div class="grip-texture"></div>
+            <div class="power-light"></div>
+        </div>
+
+        <div class="pda-screen">
+            <div class="screen-grid"></div>
+            
+            <header class="screen-header">
+                <div class="tab active"><i class="fa-solid fa-user-astronaut"></i></div>
+                <div class="tab"><i class="fa-solid fa-box-open"></i></div>
+                <div class="tab"><i class="fa-solid fa-map-location-dot"></i></div>
+                <div class="tab"><i class="fa-solid fa-gear"></i></div>
+                <div class="tab"><i class="fa-solid fa-database"></i></div>
+            </header>
+
+            <main class="screen-content">
+                <section class="column left">
+                    <h4 class="section-title">BLUEPRINTS</h4>
+                    <form id="formProduto">
+                        <div class="input-box">
+                            <input type="text" id="nome" placeholder="Item Name..." autocomplete="off">
+                        </div>
+                        <div class="input-box">
+                            <input type="number" id="preco" placeholder="Energy Cost" autocomplete="off">
+                        </div>
+                        <button type="submit" class="btn-craft">FABRICATE</button>
+                    </form>
+                </section>
+
+                <section class="column right">
+                    <h4 class="section-title">INVENTORY</h4>
+                    <div class="inventory-list-container">
+                        <ul id="listaProdutos" class="hex-grid"></ul>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

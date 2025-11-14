@@ -1,0 +1,314 @@
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&display=swap');
+
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Rajdhani', sans-serif; }
+
+body {
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #000;
+    overflow: hidden;
+}
+
+/* Fundo */
+.background-animation {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: url('ocean_bg.gif') no-repeat center center / cover; 
+    opacity: 0.6; z-index: -10;
+}
+
+/* ===========================
+   HUD (Canto Inferior)
+   =========================== */
+.hud-container {
+    position: absolute;
+    bottom: 30px;
+    right: 30px; /* Ou left, dependendo da preferência */
+    z-index: 100;
+    transform: scale(1.1);
+}
+
+.hud-cluster {
+    position: relative;
+    width: 150px; height: 150px;
+}
+
+/* Estilo Base dos Medidores */
+.gauge {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.6);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    display: flex; justify-content: center; align-items: center;
+    box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    color: #fff;
+}
+
+/* Oxigênio (O Maior) */
+.gauge.oxygen {
+    width: 90px; height: 90px;
+    top: 0; right: 0;
+    background: radial-gradient(circle, #003333 0%, #001111 100%);
+    border: 3px solid #8aff8a; /* Verde claro */
+    box-shadow: 0 0 15px #8aff8a;
+    flex-direction: column;
+    z-index: 2;
+}
+.gauge.oxygen .label { font-size: 0.9rem; color: #8aff8a; line-height: 1; }
+.gauge.oxygen .value { font-size: 2rem; font-weight: bold; line-height: 1; text-shadow: 0 0 5px #fff; }
+
+/* Bolinhas Menores */
+.gauge.health, .gauge.food, .gauge.water {
+    width: 50px; height: 50px;
+    font-size: 1.2rem;
+}
+
+.gauge.health {
+    top: 10px; left: -10px;
+    border-color: #ff5555;
+    box-shadow: 0 0 10px #ff5555;
+    background: radial-gradient(circle, #330000 0%, #000 100%);
+}
+.gauge.food {
+    bottom: 10px; left: 10px;
+    border-color: #ffaa00;
+    box-shadow: 0 0 10px #ffaa00;
+    background: radial-gradient(circle, #332200 0%, #000 100%);
+}
+.gauge.water {
+    bottom: -20px; right: 15px;
+    border-color: #00aaff;
+    box-shadow: 0 0 10px #00aaff;
+    background: radial-gradient(circle, #001133 0%, #000 100%);
+}
+
+/* ===========================
+   PDA (Tablet)
+   =========================== */
+.pda-wrapper {
+    display: flex;
+    align-items: center;
+    transform: perspective(1000px) rotateY(5deg) rotateX(2deg);
+}
+
+/* 1. O Chassi Físico (Esquerda) */
+.pda-chassis {
+    width: 80px; height: 480px;
+    background: linear-gradient(to right, #ddd, #fff, #bbb);
+    border-radius: 30px 0 0 30px;
+    position: relative;
+    z-index: 2;
+    box-shadow: inset -5px 0 10px rgba(0,0,0,0.5);
+}
+
+.grip-texture {
+    position: absolute;
+    top: 10%; bottom: 10%; left: 0; width: 50px;
+    background: #222;
+    border-radius: 0 10px 10px 0;
+    background-image: radial-gradient(#444 15%, transparent 16%);
+    background-size: 6px 6px; /* Textura de "borracha" */
+}
+
+.power-light {
+    position: absolute; top: 20px; right: 10px;
+    width: 8px; height: 8px;
+    background: #00f2ff;
+    border-radius: 50%;
+    box-shadow: 0 0 10px #00f2ff;
+}
+
+/* 2. A Tela (Direita) */
+.pda-screen {
+    width: 700px; height: 500px;
+    background: rgba(0, 20, 100, 0.65); /* Azul profundo transparente */
+    backdrop-filter: blur(4px);
+    border: 2px solid #00aaff;
+    border-left: none; /* Conecta no chassi */
+    border-radius: 0 20px 20px 0;
+    box-shadow: 0 0 30px rgba(0, 100, 255, 0.5), inset 0 0 50px rgba(0, 100, 255, 0.3);
+    position: relative;
+    display: flex; flex-direction: column;
+    padding: 20px;
+    color: #fff;
+    overflow: hidden;
+}
+
+/* O Grid de fundo da tela */
+.screen-grid {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background-image: 
+        linear-gradient(rgba(0, 255, 255, 0.1) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 255, 255, 0.1) 1px, transparent 1px);
+    background-size: 40px 40px; /* Tamanho dos quadrados */
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* Conteúdo da Tela */
+.screen-header {
+    display: flex; justify-content: center; gap: 15px;
+    border-bottom: 2px solid rgba(0, 242, 255, 0.5);
+    padding-bottom: 10px; margin-bottom: 20px;
+    position: relative; z-index: 1;
+}
+
+.tab {
+    font-size: 1.5rem; opacity: 0.5; cursor: pointer; transition: 0.3s;
+    filter: drop-shadow(0 0 2px #00f2ff);
+}
+.tab.active, .tab:hover { opacity: 1; transform: scale(1.2); color: #00f2ff; }
+
+.screen-content {
+    display: flex; flex: 1; gap: 20px; position: relative; z-index: 1;
+}
+
+.column {
+    flex: 1;
+    display: flex; flex-direction: column;
+    background: rgba(0, 10, 30, 0.4);
+    border-radius: 10px; padding: 15px;
+    border: 1px solid rgba(0, 242, 255, 0.2);
+}
+
+.section-title {
+    color: #00f2ff; margin-bottom: 15px;
+    border-left: 3px solid #00f2ff; padding-left: 10px;
+    font-size: 1.2rem; letter-spacing: 1px;
+}
+
+/* Inputs estilo Subnautica */
+.input-box {
+    background: rgba(0,0,0,0.5);
+    border: 1px solid #005577;
+    margin-bottom: 10px; padding: 5px;
+    border-radius: 4px;
+}
+
+input {
+    width: 100%; background: transparent; border: none;
+    color: #fff; font-size: 1.1rem; outline: none;
+}
+
+.btn-craft {
+    margin-top: auto;
+    background: #00f2ff; color: #000; border: none;
+    padding: 15px; font-weight: bold; font-size: 1.2rem;
+    cursor: pointer; text-transform: uppercase;
+    box-shadow: 0 0 15px rgba(0, 242, 255, 0.5);
+    transition: 0.2s; clip-path: polygon(10px 0, 100% 0, 100% 100%, 0 100%, 0 10px);
+}
+.btn-craft:hover { background: #fff; box-shadow: 0 0 25px #00f2ff; }
+
+/* Lista de Itens */
+.inventory-list-container { overflow-y: auto; flex: 1; }
+.inventory-list-container::-webkit-scrollbar { width: 5px; }
+.inventory-list-container::-webkit-scrollbar-thumb { background: #00f2ff; }
+
+ul li {
+    background: rgba(0, 242, 255, 0.1);
+    margin-bottom: 8px; padding: 10px;
+    border-left: 2px solid #00f2ff;
+    display: flex; justify-content: space-between;
+    font-size: 1.1rem;
+}
+/* --- Overlay de Perigo --- */
+#red-alert-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: radial-gradient(circle, transparent 50%, rgba(255, 0, 0, 0.6) 100%);
+    z-index: 999; pointer-events: none;
+    opacity: 0; transition: opacity 0.5s;
+}
+
+/* Animação de pulsar */
+@keyframes red-pulse {
+    0% { opacity: 0.3; box-shadow: inset 0 0 50px red; }
+    50% { opacity: 0.8; box-shadow: inset 0 0 150px red; }
+    100% { opacity: 0.3; box-shadow: inset 0 0 50px red; }
+}
+
+.critical-state #red-alert-overlay {
+    animation: red-pulse 1s infinite;
+}
+
+/* O anel que gira/diminui */
+.oxygen-fill {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    border-radius: 50%;
+    /* Variável CSS controlada pelo JS */
+    background: conic-gradient(#8aff8a var(--o2-percent, 100%), transparent 0);
+    transition: background 1s linear; /* Suaviza a descida */
+}
+
+/* O buraco no meio para parecer um anel */
+.inner-circle {
+    position: absolute; top: 10px; left: 10px; right: 10px; bottom: 10px;
+    background: radial-gradient(circle, #002222 0%, #000 100%);
+    border-radius: 50%;
+    display: flex; flex-direction: column;
+    justify-content: center; align-items: center;
+    z-index: 2;
+}
+
+/* Estados de perigo do texto */
+.oxygen-low .oxygen-fill { background: conic-gradient(red var(--o2-percent), transparent 0); }
+.oxygen-low .label, .oxygen-low .value { color: red; text-shadow: 0 0 10px red; }
+
+/* --- NOVO: Efeito de Máscara de Mergulho (Vignette) --- */
+.diving-mask {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none; /* Permite clicar através da máscara */
+    z-index: 50; /* Fica acima do fundo, mas abaixo do HUD */
+    /* Cria o efeito escuro nas bordas */
+    background: radial-gradient(circle at center, transparent 60%, black 95%);
+    box-shadow: inset 0 0 100px rgba(0,0,0,0.9);
+}
+
+/* --- NOVO: Tela de Desmaio (Blackout) --- */
+#blackout-screen {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: #000;
+    z-index: 2000; /* Acima de TUDO */
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 2s ease-in-out; /* Demora 2s para apagar/acender */
+}
+
+.passed-out #blackout-screen {
+    opacity: 1; /* Fica totalmente preto */
+    pointer-events: all; /* Bloqueia cliques enquanto desmaiado */
+}
+
+/* --- CORREÇÃO: HUD (Afastando as bolinhas) --- */
+/* O container principal das bolinhas */
+.hud-cluster {
+    position: relative;
+    width: 180px; height: 180px; /* Aumentei a área para caber tudo */
+}
+
+/* Oxigênio (Centralizado e maior) */
+.gauge.oxygen {
+    width: 90px; height: 90px;
+    position: absolute;
+    top: 0; right: 0; /* Fica no canto superior direito do cluster */
+    z-index: 10; /* Fica na frente se precisar */
+}
+
+/* Saúde (Esquerda) */
+.gauge.health {
+    position: absolute;
+    top: 20px; right: 100px; /* Empurra para a esquerda do oxigênio */
+}
+
+/* Comida (Baixo Esquerda) */
+.gauge.food {
+    position: absolute;
+    top: 80px; right: 85px; /* Diagonal abaixo */
+}
+
+/* Água (Baixo) */
+.gauge.water {
+    position: absolute;
+    top: 100px; right: 25px; /* Abaixo do oxigênio */
+}
