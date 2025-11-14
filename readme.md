@@ -1,13 +1,10 @@
 # Subnautica PDA - Fabricator System (MVC)
+![Banner](./game_print.jpg "print")
 
 > Um simulador de interface do PDA do jogo *Subnautica*, desenvolvido como atividade prática de Arquitetura de Software (Model-View-Controller).
 
 ![Badge em Desenvolvimento](http://img.shields.io/static/v1?label=STATUS&message=CONCLUIDO&color=GREEN&style=for-the-badge)
 ![Badge Tech](http://img.shields.io/static/v1?label=TECH&message=HTML5%20CSS3%20JS&color=BLUE&style=for-the-badge)
-
-## Preview do Projeto
-
-![Banner](./game_print.jpg "print")
 
 ## Sobre o Projeto
 
